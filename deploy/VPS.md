@@ -87,6 +87,20 @@ From your laptop (if firewall allows `8000`):
 
 Set `ENABLE_PLANTING_TEST_UI=false` in production if you do not want the browser test page exposed.
 
+### Client demo (public URL)
+
+Use your server’s public IP (or DNS) in place of `72.62.48.212` once **TCP 8000** is allowed (UFW + cloud security group):
+
+| What to show | URL |
+|--------------|-----|
+| JSON “it works” | `http://72.62.48.212:8000/healthz` |
+| Swagger UI | `http://72.62.48.212:8000/docs` |
+| Browser test UI | `http://72.62.48.212:8000/ui/planting-test` (requires `ENABLE_PLANTING_TEST_UI=true`) |
+
+Login for the API is **email + password** via `POST /v1/auth/login` (see `/docs`). Configure the demo user with `SEED_USER_EMAIL` and `SEED_USER_PASSWORD` in `.env` on the server; **do not commit** real passwords. If you change the seed email after the user row already exists, update the row in Postgres or pick a new email so `ensure_seed_user` can run again.
+
+**Portability:** This stack is plain **Docker Compose** ([`docker-compose.yml`](../docker-compose.yml)). The same layout runs on any Linux VM (Hetzner, AWS, GCP, DigitalOcean, etc.): install Docker, copy the project, set `.env`, `docker compose up -d`. Moving clouds is mostly a new host, firewall, and the same compose file—not a bespoke platform lock-in.
+
 ## Environment variables
 
 Values are read by **Compose** (substitution in `docker-compose.override.example.yml`) and/or by the **API container** (Pydantic `Settings` in [`server/app/config.py`](../server/app/config.py)). Use the **API env var names** in the `api.environment` section of the override file.
