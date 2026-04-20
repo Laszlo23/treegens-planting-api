@@ -1,0 +1,41 @@
+# Production-style overrides: secrets and credentials from a root `.env` file
+# (same directory as docker-compose.yml). Compose loads `.env` for ${VAR} substitution.
+#
+# Setup:
+#   cp docker-compose.override.example.yml docker-compose.override.yml
+#   # Create .env with POSTGRES_PASSWORD, MINIO_ROOT_PASSWORD, JWT_SECRET, etc.
+#   docker compose up -d --build
+#
+# Security:
+# - Use long random passwords. If POSTGRES_PASSWORD contains URL-reserved characters,
+#   URL-encode them in DATABASE_URL or use a simpler password for the DB user.
+# - Prefer firewall rules so Postgres (5432) and MinIO (9000/9001) are not public;
+#   only 8000 (or 80/443 behind a reverse proxy) should face the internet.
+
+services:
+  db:
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: ${POSTGRES_DB:-planting}
+
+  minio:
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?set MINIO_ROOT_PASSWORD in .env}
+
+  api:
+    environment:
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-planting}
+      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in .env}
+      SEED_USER_EMAIL: ${SEED_USER_EMAIL:-}
+      SEED_USER_PASSWORD: ${SEED_USER_PASSWORD:-}
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY:-}
+      S3_ENDPOINT_URL: http://minio:9000
+      S3_ACCESS_KEY: ${MINIO_ROOT_USER:-minioadmin}
+      S3_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
+      S3_BUCKET: ${S3_BUCKET:-planting-media}
+      MODEL_VERSION: ${MODEL_VERSION:-1.0.0}
+      ENABLE_PLANTING_TEST_UI: ${ENABLE_PLANTING_TEST_UI:-false}
+      ROBOFLOW_API_KEY: ${ROBOFLOW_API_KEY:-}
+      ROBOFLOW_PUBLISH_API_KEY: ${ROBOFLOW_PUBLISH_API_KEY:-}

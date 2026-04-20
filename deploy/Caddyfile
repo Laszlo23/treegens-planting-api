@@ -1,0 +1,14 @@
+# Example: terminate TLS in front of the API (Caddy 2).
+# Place TLS certs in ./certs or use automatic HTTPS with a real domain.
+# Usage: caddy run --config deploy/Caddyfile
+
+:443 {
+    tls /path/to/fullchain.pem /path/to/privkey.pem
+    reverse_proxy 127.0.0.1:8000
+}
+
+# Optional: internal OpenClaw gateway (do not expose publicly without auth)
+:8443 {
+    tls /path/to/fullchain.pem /path/to/privkey.pem
+    reverse_proxy 127.0.0.1:18789
+}

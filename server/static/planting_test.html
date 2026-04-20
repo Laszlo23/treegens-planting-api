@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Planting API test</title>
+  <style>
+    :root { font-family: system-ui, sans-serif; line-height: 1.4; max-width: 52rem; margin: 0 auto; padding: 1rem; }
+    h1 { font-size: 1.25rem; }
+    fieldset { border: 1px solid #ccc; margin: 0.75rem 0; padding: 0.75rem; border-radius: 6px; }
+    legend { font-weight: 600; }
+    label { display: block; margin: 0.35rem 0 0.1rem; }
+    input[type="text"], input[type="url"], input[type="password"], input[type="number"], input[type="datetime-local"] { width: 100%; max-width: 28rem; box-sizing: border-box; padding: 0.35rem; }
+    button { margin: 0.25rem 0.5rem 0.25rem 0; padding: 0.45rem 0.9rem; cursor: pointer; }
+    .row { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+    pre { background: #f4f4f4; padding: 0.75rem; overflow: auto; border-radius: 6px; font-size: 0.85rem; white-space: pre-wrap; word-break: break-word; }
+    .ok { color: #0a0; }
+    .err { color: #a00; }
+    .muted { color: #666; font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+  <h1>Planting API test UI</h1>
+  <p class="muted">
+    Local dev helper: log in with your <code>SEED_USER_*</code> credentials, then upload <strong>either</strong> images <strong>or</strong> videos (same as production API).
+    Open this page from the API origin (e.g. <code>/ui/planting-test</code>) so the browser calls the same host.
+  </p>
+
+  <fieldset>
+    <legend>API &amp; login</legend>
+    <label for="baseUrl">API base URL</label>
+    <input type="url" id="baseUrl" value="" placeholder="Leave empty for same origin" />
+    <p class="muted">Empty = current page origin (recommended).</p>
+    <label for="email">Email</label>
+    <input type="text" id="email" autocomplete="username" />
+    <label for="password">Password</label>
+    <input type="password" id="password" autocomplete="current-password" />
+    <div class="row">
+      <button type="button" id="btnLogin">Log in</button>
+      <button type="button" id="btnLogout">Log out</button>
+      <span id="loginStatus" class="muted">Not logged in</span>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Payload (JSON field <code>payload</code>)</legend>
+    <label for="capturedAt">captured_at (local)</label>
+    <input type="datetime-local" id="capturedAt" step="1" />
+    <label for="lat">latitude</label>
+    <input type="number" id="lat" step="any" value="-8.5" />
+    <label for="lon">longitude</label>
+    <input type="number" id="lon" step="any" value="115.2" />
+    <label for="accuracy">accuracy_m (optional)</label>
+    <input type="number" id="accuracy" step="any" min="0" placeholder="e.g. 12" />
+    <label for="claimed">claimed_tree_count (optional)</label>
+    <input type="number" id="claimed" step="1" min="0" placeholder="e.g. 5" />
+    <label for="clientId">client_event_id (UUID)</label>
+    <div class="row">
+      <input type="text" id="clientId" style="flex:1; min-width:16rem; max-width:28rem;" readonly />
+      <button type="button" id="btnNewUuid">New UUID</button>
+    </div>
+    <p class="muted">Same UUID + same user resubmits idempotently (HTTP 200).</p>
+  </fieldset>
+
+  <fieldset>
+    <legend>Media</legend>
+    <div class="row">
+      <label><input type="radio" name="mediaMode" value="images" checked /> Images</label>
+      <label><input type="radio" name="mediaMode" value="videos" /> Videos</label>
+    </div>
+    <div id="wrapImages">
+      <label for="fileImages">Image files (jpeg / png / webp)</label>
+      <input type="file" id="fileImages" multiple accept="image/jpeg,image/png,image/webp" />
+    </div>
+    <div id="wrapVideos" style="display:none;">
+      <label for="fileVideos">Video files (mp4 / mov / webm)</label>
+      <input type="file" id="fileVideos" multiple accept="video/mp4,video/quicktime,video/webm,.mp4,.mov,.webm" />
+    </div>
+  </fieldset>
+
+  <button type="button" id="btnSubmit">Submit planting event</button>
+
+  <h2>Response</h2>
+  <pre id="out">(none yet)</pre>
+
+  <script>
+    (function () {
+      var TOKEN_KEY = "planting_test_token";
+
+      function apiBase() {
+        var u = document.getElementById("baseUrl").value.trim();
+        if (u) return u.replace(/\/$/, "");
+        return window.location.origin;
+      }
+
+      function setLoginStatus(text, ok) {
+        var el = document.getElementById("loginStatus");
+        el.textContent = text;
+        el.className = ok ? "ok" : (text.indexOf("Not ") === 0 ? "muted" : "err");
+      }
+
+      function loadToken() {
+        return sessionStorage.getItem(TOKEN_KEY);
+      }
+
+      function saveToken(t) {
+        if (t) sessionStorage.setItem(TOKEN_KEY, t);
+        else sessionStorage.removeItem(TOKEN_KEY);
+      }
+
+      function showOut(obj, status) {
+        var pre = document.getElementById("out");
+        if (typeof obj === "string") {
+          pre.textContent = obj;
+          return;
+        }
+        pre.textContent = JSON.stringify(obj, null, 2);
+        if (status != null) pre.textContent = "HTTP " + status + "\n\n" + pre.textContent;
+      }
+
+      function isoFromLocal(dtLocal) {
+        if (!dtLocal) return new Date().toISOString();
+        var d = new Date(dtLocal);
+        if (isNaN(d.getTime())) return new Date().toISOString();
+        return d.toISOString();
+      }
+
+      function newUuid() {
+        document.getElementById("clientId").value = crypto.randomUUID();
+      }
+
+      document.getElementById("btnNewUuid").addEventListener("click", newUuid);
+
+      document.querySelectorAll('input[name="mediaMode"]').forEach(function (r) {
+        r.addEventListener("change", function () {
+          var v = document.querySelector('input[name="mediaMode"]:checked').value;
+          document.getElementById("wrapImages").style.display = v === "images" ? "block" : "none";
+          document.getElementById("wrapVideos").style.display = v === "videos" ? "block" : "none";
+        });
+      });
+
+      function initNow() {
+        var d = new Date();
+        d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+        document.getElementById("capturedAt").value = d.toISOString().slice(0, 19);
+      }
+
+      document.getElementById("btnLogin").addEventListener("click", async function () {
+        var base = apiBase();
+        var email = document.getElementById("email").value.trim();
+        var password = document.getElementById("password").value;
+        try {
+          var res = await fetch(base + "/v1/auth/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email: email, password: password }),
+          });
+          var data = await res.json().catch(function () { return {}; });
+          if (!res.ok) {
+            saveToken(null);
+            setLoginStatus("Login failed", false);
+            showOut(data, res.status);
+            return;
+          }
+          saveToken(data.access_token);
+          setLoginStatus("Logged in", true);
+          showOut({ access_token: "(stored)", token_type: data.token_type }, res.status);
+        } catch (e) {
+          setLoginStatus("Login error", false);
+          showOut(String(e));
+        }
+      });
+
+      document.getElementById("btnLogout").addEventListener("click", function () {
+        saveToken(null);
+        setLoginStatus("Not logged in", false);
+      });
+
+      document.getElementById("btnSubmit").addEventListener("click", async function () {
+        var token = loadToken();
+        if (!token) {
+          showOut("Log in first.");
+          return;
+        }
+        var mode = document.querySelector('input[name="mediaMode"]:checked').value;
+        var filesEl = mode === "images" ? document.getElementById("fileImages") : document.getElementById("fileVideos");
+        var files = filesEl.files;
+        if (!files || files.length === 0) {
+          showOut("Choose at least one file for " + mode + ".");
+          return;
+        }
+
+        var payload = {
+          captured_at: isoFromLocal(document.getElementById("capturedAt").value),
+          latitude: Number(document.getElementById("lat").value),
+          longitude: Number(document.getElementById("lon").value),
+          client_event_id: document.getElementById("clientId").value.trim(),
+        };
+        if (!payload.client_event_id) {
+          showOut("client_event_id is required (use New UUID).");
+          return;
+        }
+        var acc = document.getElementById("accuracy").value.trim();
+        if (acc !== "") payload.accuracy_m = Number(acc);
+        var cl = document.getElementById("claimed").value.trim();
+        if (cl !== "") payload.claimed_tree_count = parseInt(cl, 10);
+
+        var fd = new FormData();
+        fd.append("payload", JSON.stringify(payload));
+        for (var i = 0; i < files.length; i++) {
+          fd.append(mode, files[i], files[i].name);
+        }
+
+        var base = apiBase();
+        try {
+          var res = await fetch(base + "/v1/planting-events", {
+            method: "POST",
+            headers: { Authorization: "Bearer " + token },
+            body: fd,
+          });
+          var text = await res.text();
+          var data;
+          try {
+            data = JSON.parse(text);
+          } catch (_) {
+            data = text;
+          }
+          showOut(data, res.status);
+        } catch (e) {
+          showOut(String(e));
+        }
+      });
+
+      initNow();
+      newUuid();
+      if (loadToken()) setLoginStatus("Logged in (session)", true);
+    })();
+  </script>
+</body>
+</html>
