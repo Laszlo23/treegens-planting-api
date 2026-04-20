@@ -16,12 +16,26 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 http_bearer = HTTPBearer(auto_error=False)
 
 
+def _truncate_for_bcrypt(plain: str) -> str:
+    """bcrypt rejects secrets longer than 72 bytes; truncate UTF-8 safely."""
+    b = plain.encode("utf-8")
+    if len(b) <= 72:
+        return plain
+    b = b[:72]
+    while b:
+        try:
+            return b.decode("utf-8")
+        except UnicodeDecodeError:
+            b = b[:-1]
+    return ""
+
+
 def verify_password(plain: str, hashed: str) -> bool:
-    return pwd_context.verify(plain, hashed)
+    return pwd_context.verify(_truncate_for_bcrypt(plain), hashed)
 
 
 def hash_password(plain: str) -> str:
-    return pwd_context.hash(plain)
+    return pwd_context.hash(_truncate_for_bcrypt(plain))
 
 
 def create_access_token(
