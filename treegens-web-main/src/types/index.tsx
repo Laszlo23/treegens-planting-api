@@ -88,6 +88,12 @@ export type MlVerificationSummary = {
   modelVersion?: string
   verifiedAt?: string
   error?: string
+  /** From model.confidence_summary (deduped count). */
+  uniqueTreeEstimate?: number
+  /** Raw detection count before dedupe. */
+  totalTreeDetections?: number
+  /** Frames/images evaluated from the clip. */
+  imagesEvaluated?: number
 }
 
 export interface Vote {

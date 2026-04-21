@@ -4,6 +4,24 @@ import { VideoStatus } from '@/types'
 
 const OID_RE = /^[a-fA-F0-9]{24}$/
 
+function confidenceSummaryFromStoredResult(result: unknown): Pick<
+  MlVerificationSummary,
+  'uniqueTreeEstimate' | 'totalTreeDetections' | 'imagesEvaluated'
+> {
+  if (result == null || typeof result !== 'object') return {}
+  const r = result as Record<string, unknown>
+  const model = r.model as Record<string, unknown> | undefined
+  const cs = model?.confidence_summary as Record<string, unknown> | undefined
+  if (!cs || typeof cs !== 'object') return {}
+  const num = (v: unknown) =>
+    typeof v === 'number' && Number.isFinite(v) ? v : undefined
+  return {
+    uniqueTreeEstimate: num(cs.unique_tree_estimate),
+    totalTreeDetections: num(cs.total_tree_detections),
+    imagesEvaluated: num(cs.images_evaluated),
+  }
+}
+
 export function isValidSubmissionObjectId(id: string | undefined): boolean {
   return Boolean(id && OID_RE.test(id))
 }
@@ -28,7 +46,10 @@ type ClipLike = {
   gpsCoordinates?: { latitude?: number; longitude?: number }
   reverseGeocode?: string
   uploadedAt?: string
-  mlVerification?: MlVerificationSummary & { verifiedAt?: string | Date }
+  mlVerification?: MlVerificationSummary & {
+    verifiedAt?: string | Date
+    result?: unknown
+  }
 }
 
 type SubmissionLike = {
@@ -58,6 +79,10 @@ function clipToVideo(
   if (!clip?.uploaded) return null
   const gps = clip.gpsCoordinates || {}
   const mlRaw = clip.mlVerification
+  const fromStored =
+    mlRaw && 'result' in mlRaw && mlRaw.result != null
+      ? confidenceSummaryFromStoredResult(mlRaw.result)
+      : {}
   const mlVerification: MlVerificationSummary | undefined = mlRaw
     ? {
         aggregatePass: mlRaw.aggregatePass,
@@ -66,6 +91,10 @@ function clipToVideo(
         verifiedAt: mlRaw.verifiedAt
           ? String(mlRaw.verifiedAt)
           : undefined,
+        uniqueTreeEstimate: mlRaw.uniqueTreeEstimate ?? fromStored.uniqueTreeEstimate,
+        totalTreeDetections:
+          mlRaw.totalTreeDetections ?? fromStored.totalTreeDetections,
+        imagesEvaluated: mlRaw.imagesEvaluated ?? fromStored.imagesEvaluated,
       }
     : undefined
   return {

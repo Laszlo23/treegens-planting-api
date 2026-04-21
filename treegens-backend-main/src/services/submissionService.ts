@@ -33,6 +33,26 @@ export type UploadSlot = 'land' | 'plant'
 
 const MANGROVE_TREE_TYPE = 'mangrove'
 
+/** Reads FastAPI verification JSON stored on clip.mlVerification.result (snake_case). */
+function confidenceSummaryFromVerificationResult(result: unknown): {
+  uniqueTreeEstimate?: number
+  totalTreeDetections?: number
+  imagesEvaluated?: number
+} {
+  if (result == null || typeof result !== 'object') return {}
+  const r = result as Record<string, unknown>
+  const model = r.model as Record<string, unknown> | undefined
+  const cs = model?.confidence_summary as Record<string, unknown> | undefined
+  if (!cs || typeof cs !== 'object') return {}
+  const num = (v: unknown) =>
+    typeof v === 'number' && Number.isFinite(v) ? v : undefined
+  return {
+    uniqueTreeEstimate: num(cs.unique_tree_estimate),
+    totalTreeDetections: num(cs.total_tree_detections),
+    imagesEvaluated: num(cs.images_evaluated),
+  }
+}
+
 class SubmissionService {
   private normalizeTreeType(value: string): string {
     return String(value ?? '')
@@ -284,6 +304,10 @@ class SubmissionService {
     const plant = submission.plant || {}
     const clip = uploadedType === 'land' ? land : plant
     const ml = clip.mlVerification
+    const fromResult =
+      ml && typeof ml === 'object' && ml.result != null
+        ? confidenceSummaryFromVerificationResult(ml.result)
+        : {}
     const mlSummary =
       ml && typeof ml === 'object'
         ? {
@@ -291,6 +315,7 @@ class SubmissionService {
             modelVersion: ml.modelVersion as string | undefined,
             verifiedAt: ml.verifiedAt,
             error: ml.error as string | undefined,
+            ...fromResult,
           }
         : undefined
     return {
