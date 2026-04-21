@@ -14,7 +14,8 @@ Use this document to run everything locally or on a cloud VPS and to run a **min
 6. [Tier 2 — Next.js frontend](#tier-2--nextjs-frontend)
 7. [Deploying to a cloud server](#deploying-to-a-cloud-server)
 8. [Environment variables (cheat sheet)](#environment-variables-cheat-sheet)
-9. [Troubleshooting](#troubleshooting)
+9. [Developer verification checklist](#developer-verification-checklist)
+10. [Troubleshooting](#troubleshooting)
 
 ---
 
@@ -264,6 +265,21 @@ See [`treegens-web-main/.env.example`](treegens-web-main/.env.example).
 
 ---
 
+## Developer verification checklist
+
+Run these before treating an environment as production-ready:
+
+| Step | Command / action |
+|------|------------------|
+| Compose file valid | From repo root: `docker compose config -q` |
+| FastAPI image builds | `docker compose build api` (first build downloads PyTorch; allow several minutes) |
+| FastAPI up + health | `docker compose up -d` then `./scripts/smoke-test.sh` |
+| Node API compiles | `cd treegens-backend-main && MONGODB_URI='mongodb://127.0.0.1:27017/test' PINATA_JWT='x' yarn build` |
+| Node unit tests | `cd treegens-backend-main && yarn test` — defaults `MONGODB_URI` to `mongodb://127.0.0.1:27017/test` on macOS/Linux (override if needed). On Windows CMD, set `MONGODB_URI` manually before `yarn test` |
+| Next.js production build | `cd treegens-web-main && yarn build` — works without `NEXT_PUBLIC_THIRDWEB_CLIENT_ID` thanks to a build placeholder in [`treegens-web-main/src/config/thirdwebConfig.ts`](treegens-web-main/src/config/thirdwebConfig.ts); **set a real Thirdweb Client ID** for live wallet features |
+
+---
+
 ## Troubleshooting
 
 | Symptom | Likely cause |
@@ -272,6 +288,9 @@ See [`treegens-web-main/.env.example`](treegens-web-main/.env.example).
 | `0` detections / stub behaviour | `MODEL_PATH` not mounted or file missing; check compose override |
 | Node uploads succeed but no ML fields | `PLANTING_VERIFICATION_*` unset; or verifier error stored in `mlVerification.error` |
 | Timeouts | Increase `PLANTING_VERIFICATION_TIMEOUT_MS`; ensure CPU can run ffmpeg + YOLO |
+| `next build` failed with Thirdweb “clientId must be provided” | Fixed by placeholder in `thirdwebConfig.ts`; pull latest or set `NEXT_PUBLIC_THIRDWEB_CLIENT_ID` |
+| `yarn test` fails: missing `MONGODB_URI` | Export `MONGODB_URI` (any URI string is enough for unit tests that only import config) |
+| `yarn build` in backend fails on `.test.ts` | Production `tsc` excludes `src/**/*.test.ts`; use `yarn build` not `tsc` including tests |
 | Database errors in FastAPI | `DATABASE_URL` must match Postgres credentials (host `db` inside Compose) |
 
 ---

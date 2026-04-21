@@ -1,8 +1,8 @@
 # Local secrets (never commit)
 .env
 **/.env
-!**/.env.example
 .env.*
+!**/.env.example
 docker-compose.override.yml
 
 # Python
