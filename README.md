@@ -15,7 +15,9 @@ Use this document to run everything locally or on a cloud VPS and to run a **min
 7. [Deploying to a cloud server](#deploying-to-a-cloud-server)
 8. [Environment variables (cheat sheet)](#environment-variables-cheat-sheet)
 9. [Developer verification checklist](#developer-verification-checklist)
-10. [Troubleshooting](#troubleshooting)
+10. [Handoff notes for app developers](#handoff-notes-for-app-developers)
+11. [Troubleshooting](#troubleshooting)
+12. [More links](#more-links)
 
 ---
 
@@ -277,6 +279,24 @@ Run these before treating an environment as production-ready:
 | Node API compiles | `cd treegens-backend-main && MONGODB_URI='mongodb://127.0.0.1:27017/test' PINATA_JWT='x' yarn build` |
 | Node unit tests | `cd treegens-backend-main && yarn test` — defaults `MONGODB_URI` to `mongodb://127.0.0.1:27017/test` on macOS/Linux (override if needed). On Windows CMD, set `MONGODB_URI` manually before `yarn test` |
 | Next.js production build | `cd treegens-web-main && yarn build` — works without `NEXT_PUBLIC_THIRDWEB_CLIENT_ID` thanks to a build placeholder in [`treegens-web-main/src/config/thirdwebConfig.ts`](treegens-web-main/src/config/thirdwebConfig.ts); **set a real Thirdweb Client ID** for live wallet features |
+
+---
+
+## Handoff notes for app developers
+
+Read this section once when taking over the repo or deploying to a new environment.
+
+1. **Pull latest `main`** before you start so you get the handoff fixes (TypeScript test excludes, Thirdweb build placeholder, `yarn test` defaults, `.gitignore` allowing `.env.example` files).
+
+2. **Repository layout:** This monorepo contains **FastAPI** (`server/`), **Node API** (`treegens-backend-main/`), and **Next.js** (`treegens-web-main/`). Depending on how the project was synced, your checkout might show **additional untracked files** beside what Git tracks (for example a full copy of the app that lived only on disk). The **canonical** integration and env docs are this README plus each subfolder’s `.env.example`. If you maintain a single shared repo, consider a follow-up change that **commits the full** `treegens-backend-main` and `treegens-web-main` trees (with `node_modules/`, `.next/`, etc. ignored) so every developer gets the same tree from `git clone`.
+
+3. **Docker / FastAPI:** Prefer **Docker** for the Python API (`docker compose` from the repo root). The **first** `docker compose build api` can take **several minutes** (CPU PyTorch, ffmpeg, dependencies). Plan for that in CI and on a new laptop.
+
+4. **ML verification must match secrets:** `PLANTING_VERIFICATION_INTERNAL_KEY` in the Node process must be **identical** to `INTERNAL_API_KEY` in the FastAPI environment. If they differ, Node gets **401** on `POST /internal/verify-video` and uploads may still succeed without ML summary fields.
+
+5. **Thirdweb:** `yarn build` for the frontend is designed to work **without** setting `NEXT_PUBLIC_THIRDWEB_CLIENT_ID` (build placeholder in `thirdwebConfig.ts`). For **real** wallet and dashboard flows in production, create a Client ID in the [Thirdweb dashboard](https://thirdweb.com/dashboard) and set `NEXT_PUBLIC_THIRDWEB_CLIENT_ID`.
+
+6. **Quick verification:** Run the [Developer verification checklist](#developer-verification-checklist) above on your machine before declaring staging/production ready.
 
 ---
 
