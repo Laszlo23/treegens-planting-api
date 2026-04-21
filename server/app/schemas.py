@@ -69,6 +69,13 @@ class InternalReverifyResponse(BaseModel):
     verification: VerificationBlock
 
 
+class InternalVerifyVideoResponse(BaseModel):
+    """Stateless /internal/verify-video response (includes server model version)."""
+
+    verification: VerificationBlock
+    model_version: str
+
+
 class PlantingEventRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 

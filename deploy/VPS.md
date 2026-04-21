@@ -101,6 +101,19 @@ Login for the API is **email + password** via `POST /v1/auth/login` (see `/docs`
 
 **Portability:** This stack is plain **Docker Compose** ([`docker-compose.yml`](../docker-compose.yml)). The same layout runs on any Linux VM (Hetzner, AWS, GCP, DigitalOcean, etc.): install Docker, copy the project, set `.env`, `docker compose up -d`. Moving clouds is mostly a new host, firewall, and the same compose file—not a bespoke platform lock-in.
 
+### Treegens Node backend + web (ML verification)
+
+If you run [`treegens-backend-main`](../treegens-backend-main/) (Express) and [`treegens-web-main`](../treegens-web-main/) against this FastAPI service, configure the **Node** process (not the browser) so uploads trigger `POST /internal/verify-video`:
+
+| Variable | Purpose |
+|----------|---------|
+| `PLANTING_VERIFICATION_API_URL` | Base URL of this API, e.g. `http://127.0.0.1:8000` or `http://planting-api:8000` on Docker networks |
+| `PLANTING_VERIFICATION_INTERNAL_KEY` | Must match `INTERNAL_API_KEY` in the Python API environment |
+| `PLANTING_VERIFICATION_ENABLED` | Optional `true` / `false`. If unset, ML runs only when **both** URL and key are set (otherwise uploads skip ML silently) |
+| `PLANTING_VERIFICATION_TIMEOUT_MS` | Optional; default `180000` (3 minutes) for slow YOLO/ffmpeg |
+
+Use a private network or firewall so **`INTERNAL_API_KEY` is never exposed** to clients. The Next.js app only receives **summary** fields on submission clips (`mlVerification.aggregatePass`, etc.) returned by the Node API.
+
 ## Environment variables
 
 Values are read by **Compose** (substitution in `docker-compose.override.example.yml`) and/or by the **API container** (Pydantic `Settings` in [`server/app/config.py`](../server/app/config.py)). Use the **API env var names** in the `api.environment` section of the override file.
