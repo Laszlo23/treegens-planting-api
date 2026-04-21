@@ -18,6 +18,7 @@ COPY alembic.ini .
 COPY alembic ./alembic
 COPY app ./app
 COPY static ./static
+COPY scripts ./scripts
 
 ENV PYTHONPATH=/app
 EXPOSE 8000

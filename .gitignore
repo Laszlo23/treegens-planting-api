@@ -1,5 +1,45 @@
+# Local secrets (never commit)
 .env
+**/.env
+!**/.env.example
+.env.*
 docker-compose.override.yml
+
+# Python
 server/.venv/
 **/__pycache__/
-*.pyc
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Archives and accidental exports
+*.zip
+
+# Node / frontend (if ever tracked from repo root)
+node_modules/
+.next/
+out/
+dist/
+build/
+*.tsbuildinfo
+
+# ML weights & training outputs (keep datasets in Roboflow or external storage)
+*.pt
+*.onnx
+**/runs/
+test/runs/
+# Allow small fixtures if you add them later
+!**/fixtures/**/*.pt
+
+# Logs
+*.log
+logs/

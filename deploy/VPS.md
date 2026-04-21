@@ -2,6 +2,8 @@
 
 This runbook deploys the stack from the repo root [`docker-compose.yml`](../docker-compose.yml) (Postgres, MinIO, API) to a Linux host. Example host IP used in docs: `72.62.48.212` — replace with your server.
 
+For **Node + Next + FastAPI** together (env vars, smoke tests, model mount), start with the repo root **[README.md](../README.md)**.
+
 **Do not commit** `.env`, `docker-compose.override.yml`, SSH keys, or API passwords. Rotate any secret that was ever shared in chat.
 
 ## Suggested server layout
@@ -112,7 +114,7 @@ If you run [`treegens-backend-main`](../treegens-backend-main/) (Express) and [`
 | `PLANTING_VERIFICATION_ENABLED` | Optional `true` / `false`. If unset, ML runs only when **both** URL and key are set (otherwise uploads skip ML silently) |
 | `PLANTING_VERIFICATION_TIMEOUT_MS` | Optional; default `180000` (3 minutes) for slow YOLO/ffmpeg |
 
-Use a private network or firewall so **`INTERNAL_API_KEY` is never exposed** to clients. The Next.js app only receives **summary** fields on submission clips (`mlVerification.aggregatePass`, etc.) returned by the Node API.
+Use a private network or firewall so **`INTERNAL_API_KEY` is never exposed** to clients. The Next.js app only receives **summary** fields on submission clips from the Node API (`mlVerification.aggregatePass`, `modelVersion`, and parsed counts such as `uniqueTreeEstimate` / `totalTreeDetections` when verification succeeded).
 
 ## Environment variables
 

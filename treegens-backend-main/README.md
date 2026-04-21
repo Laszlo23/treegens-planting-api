@@ -2,6 +2,8 @@
 
 A comprehensive Node.js backend application for the Treegens video upload platform that handles video uploads to IPFS via Filebase, user management with wallet authentication, and content moderation workflows. Built with MongoDB for metadata storage and designed for scalable deployment.
 
+**Monorepo:** end-to-end deployment (FastAPI verifier, this API, Next.js, env cheat sheet, smoke tests) lives in the repository root [`README.md`](../README.md).
+
 ## 🌟 Features
 
 ### Video Management
