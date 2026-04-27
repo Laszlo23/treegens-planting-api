@@ -71,8 +71,7 @@ export async function verifyClipWithPlantingApi(
 
     if (res.status >= 400) {
       const detail =
-        (res.data as { detail?: string | unknown })?.detail ??
-        res.statusText
+        (res.data as { detail?: string | unknown })?.detail ?? res.statusText
       const msg =
         typeof detail === 'string'
           ? detail
@@ -123,7 +122,9 @@ type FrameVerifyInput = {
  */
 export async function verifyFrameWithPlantingApi(
   input: FrameVerifyInput,
-): Promise<{ ok: true; data: MlFramePreviewOk } | { ok: false; error: string }> {
+): Promise<
+  { ok: true; data: MlFramePreviewOk } | { ok: false; error: string }
+> {
   if (!env.PLANTING_VERIFICATION_ENABLED) {
     return { ok: false, error: 'planting_verification_disabled' }
   }

@@ -1,5 +1,5 @@
-import User from '../models/User'
 import Submission from '../models/Submission'
+import User from '../models/User'
 import VerifierWarning from '../models/VerifierWarning'
 
 export type VerifierWarningBanner = {

@@ -13,9 +13,9 @@ import {
   validateSubmissionUpload,
 } from '../middleware/validation'
 import User from '../models/User'
-import SubmissionService from '../services/submissionService'
 import HealthCheckService from '../services/healthCheckService'
 import { verifyFrameWithPlantingApi } from '../services/plantingVerificationService'
+import SubmissionService from '../services/submissionService'
 import {
   sendBadRequest,
   sendCreated,

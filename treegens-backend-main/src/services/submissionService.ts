@@ -4,10 +4,10 @@ import { uploadToPinata } from '../config/pinata'
 import { generateUniqueFileName } from '../middleware/upload'
 import Submission from '../models/Submission'
 import User from '../models/User'
-import RewardService from './rewardService'
-import { verifyClipWithPlantingApi } from './plantingVerificationService'
-import { applyMinorityPenaltiesForVotes } from './verifierPenaltyService'
 import { determineMajorityVote } from '../utils/verifierMajority'
+import { verifyClipWithPlantingApi } from './plantingVerificationService'
+import RewardService from './rewardService'
+import { applyMinorityPenaltiesForVotes } from './verifierPenaltyService'
 
 const rewardService = new RewardService()
 

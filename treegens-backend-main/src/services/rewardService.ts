@@ -4,8 +4,8 @@ import HealthCheck from '../models/HealthCheck'
 import RewardAllocation from '../models/RewardAllocation'
 import Submission from '../models/Submission'
 import User from '../models/User'
-import RewardMintService from './rewardMintService'
 import RewardClaimQueueService from './rewardClaimQueueService'
+import RewardMintService from './rewardMintService'
 
 function normalizeWallet(w: string): string {
   return String(w).toLowerCase()
