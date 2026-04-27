@@ -37,6 +37,19 @@ Examples:
 
 ---
 
+## Full video upload (land / plant clip) — ML is already wired in Node
+
+When a user uploads a **video** (`POST …/api/submissions/upload`), the Node server:
+
+1. Uploads the file to **IPFS (Pinata)**.
+2. Calls **FastAPI** `POST /internal/verify-video` with the **same video bytes** plus GPS/time (implementation: [`treegens-backend-main/src/services/submissionService.ts`](../treegens-backend-main/src/services/submissionService.ts) → `verifyClipWithPlantingApi` in [`plantingVerificationService.ts`](../treegens-backend-main/src/services/plantingVerificationService.ts)).
+3. Stores the JSON result on the clip as **`mlVerification`** (Mongo), including `aggregatePass`, `modelVersion`, and the full `verification` block.
+
+**ML runs automatically** when both `PLANTING_VERIFICATION_API_URL` and `PLANTING_VERIFICATION_INTERNAL_KEY` are set on the Node process (see [`treegens-backend-main/src/config/environment.ts`](../treegens-backend-main/src/config/environment.ts) — if either is missing, verification is skipped and `mlVerification` may contain an error code).  
+On the **Python** side, real counts require **`MODEL_PATH`** pointing at trained weights (not stub mode) — same stack as local [`docker-compose.ml-local.yml`](../docker-compose.ml-local.yml).
+
+---
+
 ## Live “on the fly” planting / tree verification (recording)
 
 The web app sends **JPEG frames** while the user records; the Node API proxies to FastAPI for an **advisory** count (full proof is still the uploaded video).
