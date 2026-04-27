@@ -57,7 +57,10 @@ flowchart LR
 | [`treegens-backend-main/`](treegens-backend-main/) | Node API, Swagger, Mongo migrations |
 | [`treegens-backend-main/docker-compose-local.yml`](treegens-backend-main/docker-compose-local.yml) | Local Mongo + backend container |
 | [`treegens-web-main/`](treegens-web-main/) | Next.js frontend |
+| [`deploy/4EVERLAND.md`](deploy/4EVERLAND.md) | 4everland static **frontend** + where to run Node/FastAPI (full runbook) |
 | [`deploy/VPS.md`](deploy/VPS.md) | Detailed VPS runbook for the **Python** stack only |
+| [`deploy/DEVELOPER-HANDOFF.md`](deploy/DEVELOPER-HANDOFF.md) | **Give this to developers:** production API URL, Swagger, live ML preview |
+| [`deploy/README.md`](deploy/README.md) | Index of deploy docs |
 | [`scripts/smoke-test.sh`](scripts/smoke-test.sh) | Curl health checks against the FastAPI service |
 
 ---
@@ -189,7 +192,7 @@ yarn dev
 # listens on PORT from .env (default 5000)
 ```
 
-Swagger is typically at `http://localhost:5000/api-docs` (see `treegens-backend-main` README).
+Swagger is at `{NODE_API_BASE}/docs` (e.g. `http://localhost:5000/docs` locally — see `treegens-backend-main` README).
 
 ### 4. Verify ML integration
 
@@ -207,7 +210,7 @@ cp .env.example .env.local
 Set:
 
 ```bash
-NEXT_PUBLIC_API_URL=http://localhost:5000   # your Node API URL (HTTPS in production)
+NEXT_PUBLIC_API_URL=http://localhost:5000   # production: https://tree.buildingculture.capital — see deploy/DEVELOPER-HANDOFF.md
 ```
 
 ```bash
@@ -222,13 +225,15 @@ The browser **never** sends the internal FastAPI key; it only calls the Node API
 
 ## Deploying to a cloud server
 
+**4everland (static app + API elsewhere):** 4everland [Hosting](https://www.4everland.org/) publishes the **Next.js static export** (`treegens-web-main/out/`) to IPFS (or other networks). It does **not** run the **Node/Express** server. For a single runbook (Node on a VPS or PaaS, optional FastAPI, then `NEXT_PUBLIC_API_URL` and 4everland build settings), see **[deploy/4EVERLAND.md](deploy/4EVERLAND.md)** and the [deploy index](deploy/README.md).
+
 High-level checklist:
 
-1. **VPS**: Docker installed; firewall allows SSH + public ports you need (e.g. 443 for Nginx/Caddy, or 8000 for quick tests only).
+1. **VPS** (or equivalent): Docker installed; firewall allows SSH + public ports you need (e.g. 443 for Nginx/Caddy, or 8000 for quick tests only).
 2. **FastAPI**: follow **[deploy/VPS.md](deploy/VPS.md)** — clone repo, `.env`, `docker-compose.override.yml`, model file, `docker compose up -d --build`.
 3. **Node**: run in Docker or PM2; set `PLANTING_VERIFICATION_API_URL` to the **internal** URL of FastAPI (e.g. `http://127.0.0.1:8000` if on the same host behind reverse proxy).
 4. **MongoDB**: managed Atlas or a container with persistent volume; URI in `MONGODB_URI`.
-5. **Frontend**: build with `yarn build`, run `yarn start`, or deploy to Vercel/static host with `NEXT_PUBLIC_API_URL` pointing to your **public** Node URL.
+5. **Frontend**: build with `yarn build`, run `yarn start`, or deploy the static export to 4everland or another host; set `NEXT_PUBLIC_API_URL` to your **public** Node URL at **build** time (HTTPS in production).
 
 Never expose `INTERNAL_API_KEY` / `PLANTING_VERIFICATION_INTERNAL_KEY` to clients.
 
@@ -317,6 +322,12 @@ Read this section once when taking over the repo or deploying to a new environme
 
 ## More links
 
+- **Developers (API URLs, Swagger, live ML preview)**: [`deploy/DEVELOPER-HANDOFF.md`](deploy/DEVELOPER-HANDOFF.md), [`deploy/API-ENDPOINTS-DEV-HANDOFF.md`](deploy/API-ENDPOINTS-DEV-HANDOFF.md)
+- **4everland + full stack**: [`deploy/4EVERLAND.md`](deploy/4EVERLAND.md), [`deploy/4EVERLAND-ENV-CHECKLIST.md`](deploy/4EVERLAND-ENV-CHECKLIST.md), [`deploy/README.md`](deploy/README.md)
+- **SSH keys / secrets (read first)**: [`deploy/SSH-AUTH-AND-SECRETS.md`](deploy/SSH-AUTH-AND-SECRETS.md)
+- **DNS + Caddy (API HTTPS)**: [`deploy/caddy/SETUP-DNS-AND-CADDY.md`](deploy/caddy/SETUP-DNS-AND-CADDY.md)
+- **SSH server + 4everland (VPS + static site)**: [`deploy/SSH-AND-4EVERLAND.md`](deploy/SSH-AND-4EVERLAND.md), [`scripts/deploy/`](scripts/deploy/)
+- **Simplest live ML preview (local test first)**: [`deploy/SIMPLE-ML-VERIFICATION-RUNBOOK.md`](deploy/SIMPLE-ML-VERIFICATION-RUNBOOK.md)
 - **Roboflow / dataset**: [`data.yaml`](data.yaml), [`README.roboflow.txt`](README.roboflow.txt)
 - **Python API docs** (when running): `/docs`
 - **OpenClaw / other deploy notes**: [`deploy/OPENCLAW.md`](deploy/OPENCLAW.md)

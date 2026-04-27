@@ -4,6 +4,13 @@ const path = require('path')
 const isStaticExport =
   process.env.STATIC_EXPORT === 'true' || process.env.STATIC_EXPORT === '1'
 
+if (isStaticExport && !process.env.NEXT_PUBLIC_API_URL) {
+  // eslint-disable-next-line no-console
+  console.warn(
+    '\n[treegens] STATIC_EXPORT: set NEXT_PUBLIC_API_URL to your public Node/Express API (HTTPS, no trailing slash). See deploy/4EVERLAND.md\n',
+  )
+}
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,

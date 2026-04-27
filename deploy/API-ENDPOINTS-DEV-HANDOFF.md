@@ -1,12 +1,25 @@
 # Treegens API — developer handoff
 
-## Why there is “no URL” in the repo
+## Production base URL (current deploy)
+
+**`NODE_API_BASE`:** `https://tree.buildingculture.capital` (no trailing slash)
+
+| Resource | URL |
+|----------|-----|
+| Swagger | `https://tree.buildingculture.capital/docs` |
+| Health | `https://tree.buildingculture.capital/health` |
+
+For staging or another fork, substitute your own origin. Overview: [DEVELOPER-HANDOFF.md](DEVELOPER-HANDOFF.md).
+
+---
+
+## Why there is “no URL” hardcoded in app code
 
 The app **does not hardcode** a single production API host. The real base URL comes from **environment variables**:
 
 | App | Variable | What it is |
 |-----|----------|------------|
-| **Next.js (browser)** | `NEXT_PUBLIC_API_URL` | Full origin of the **Node/Express** API, e.g. `https://api.yourcompany.com` or `http://localhost:5000`. **If unset**, the frontend falls back to a **dev default** in code (`treegens-web-main/src/services/axiosInstance.ts` — check that file for the current fallback). |
+| **Next.js (browser)** | `NEXT_PUBLIC_API_URL` | Full origin of the **Node/Express** API (e.g. your hosted backend URL or `http://localhost:5000` for local). **Required** for static/IPFS production builds. If unset in **development**, the app uses `http://localhost:5000` (see `treegens-web-main/src/config/publicApiUrl.ts`). |
 | **Node → ML service** | `PLANTING_VERIFICATION_API_URL` | Where **FastAPI** runs (often `http://127.0.0.1:8000` on the same server). **Not** used by the browser. |
 
 So **endpoints are paths**; **full URLs** are always:
@@ -17,7 +30,7 @@ So **endpoints are paths**; **full URLs** are always:
 
 Rules:
 
-- **`NODE_API_BASE`**: scheme + host + optional port, **no trailing slash** (e.g. `https://treegens-be.generalmagic.io` or `http://localhost:5000`).
+- **`NODE_API_BASE`**: scheme + host + optional port, **no trailing slash** (e.g. `https://api.yourdomain.example` or `http://localhost:5000`).
 - **`PATH`**: starts with `/` (e.g. `/api/auth/signin`).
 
 Example: if `NODE_API_BASE` is `http://localhost:5000`, sign-in is  
@@ -51,6 +64,10 @@ Use these on top of whatever `NODE_API_BASE` you agree on (local, staging, prod)
 - `GET /api/submissions/{submissionId}/health-checks`
 - `GET /api/submissions/{submissionId}/health-checks/{healthCheckId}`
 - `POST /api/submissions/{submissionId}/health-checks/{healthCheckId}/vote`
+
+**Live recording (JPEG frame → advisory ML counts):**
+
+- `POST /api/submissions/ml-preview` — `multipart/form-data`, authenticated; proxies to FastAPI `/internal/verify-frame`. Used by the camera flow during recording.
 
 ### Users
 
@@ -118,4 +135,4 @@ Replace `{ML_API_BASE}` with whatever host:port actually runs the `server/` Fast
 
 ## Optional: example only (not mandatory)
 
-If your deployment matches the **example** values in `treegens-web-main/.env.example`, then `NODE_API_BASE` might be `https://treegens-be.generalmagic.io` — but that is **only** valid if **your** deployed API really lives there. Same for any VPS IP for ML: only use it if FastAPI is actually exposed there and Node is allowed to reach it.
+Set `NODE_API_BASE` to wherever **your** Node API is actually deployed (VPS, PaaS, etc.—not 4everland’s **static** site URL). See `deploy/4EVERLAND.md`. Same for any ML host: only use it if FastAPI is reachable from that Node server and allowed by your network configuration.

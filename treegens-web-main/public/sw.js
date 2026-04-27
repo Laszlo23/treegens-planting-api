@@ -63,8 +63,9 @@ console.info = (...args) => {
 // Latest auth token (kept in-memory and persisted in IndexedDB)
 let CURRENT_AUTH_TOKEN = null
 
-// Service workers can't access process.env, so use hardcoded URL or receive from main thread
-let BASE_URL = 'https://treegens-be.generalmagic.io' // Default fallback
+// No process.env; main thread sends the real API via SET_BASE_URL (from NEXT_PUBLIC_API_URL at build time).
+// Local default matches getPublicApiUrl() dev fallback until the first message.
+let BASE_URL = 'http://localhost:5000'
 
 // Files to cache for offline functionality
 const STATIC_ASSETS = [

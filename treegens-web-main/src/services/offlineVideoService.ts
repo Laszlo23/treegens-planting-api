@@ -3,6 +3,7 @@
  * Handles queuing videos for background sync when offline
  */
 
+import { getPublicApiUrl } from '@/config/publicApiUrl'
 import { AuthService } from './authService'
 import {
   CompressionProgress,
@@ -540,8 +541,7 @@ export class OfflineVideoService {
    */
   private async sendBaseURLToServiceWorker(): Promise<void> {
     try {
-      const baseURL =
-        process.env.NEXT_PUBLIC_API_URL || 'https://treegens-be.generalmagic.io'
+      const baseURL = getPublicApiUrl()
       await this.sendMessageToServiceWorker('SET_BASE_URL', { baseURL })
     } catch (error) {
       console.log(

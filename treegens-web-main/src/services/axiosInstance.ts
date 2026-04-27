@@ -1,7 +1,8 @@
 import axios from 'axios'
+import { getPublicApiUrl } from '@/config/publicApiUrl'
 import { getJwtToken } from './jwtTokenStore'
 
-const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://192.168.0.180:5001'
+const apiUrl = getPublicApiUrl()
 
 export const axiosInstance = axios.create({
   baseURL: apiUrl,
@@ -17,7 +18,7 @@ axiosInstance.interceptors.request.use(
     if (typeof window !== 'undefined') {
       const requestUrl = config.baseURL || config.url || ''
       // Only add token if the request is going to our API
-      if (requestUrl.includes(apiUrl) || config.baseURL === apiUrl) {
+      if (apiUrl && (requestUrl.includes(apiUrl) || config.baseURL === apiUrl)) {
         const token = getJwtToken()
         if (token) {
           if (!config.headers) {

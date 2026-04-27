@@ -7,8 +7,8 @@
     "build": "next build",
     "build:ipfs": "STATIC_EXPORT=true next build",
     "start": "next start",
-    "lint": "next lint",
-    "lint:fix": "next lint --fix",
+    "lint": "tsc -p tsconfig.json --noEmit",
+    "lint:fix": "prettier --write .",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },

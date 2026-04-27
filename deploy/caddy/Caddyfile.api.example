@@ -1,0 +1,10 @@
+# Treegens Node API — copy to the server and merge into /etc/caddy/Caddyfile (or include this file).
+# Replace api.example.com with your real API hostname (DNS A record → this server).
+# Caddy obtains Let's Encrypt certificates automatically on :443.
+#
+# Preconditions: Node listens on 127.0.0.1:5000 (treegens-backend); firewall allows 80 and 443.
+
+api.example.com {
+	encode gzip zstd
+	reverse_proxy 127.0.0.1:5000
+}

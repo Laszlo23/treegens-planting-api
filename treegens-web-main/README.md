@@ -51,7 +51,7 @@ A decentralized tree planting verification platform built with Next.js that enab
    ```env
    NEXT_PUBLIC_IPFS_GATEWAY=your-gateway
    NEXT_PUBLIC_THIRDWEB_CLIENT_ID=your-thirdweb-client-id
-   NEXT_PUBLIC_API_BASE_URL=https://treegens-be.generalmagic.io
+   NEXT_PUBLIC_API_URL=https://your-node-api-origin.example
    ```
 
 4. **Run the development server**

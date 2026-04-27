@@ -1,5 +1,23 @@
 # IPFS (4everland) + Freename + Treegens frontend
 
+## 0. What to publish (very important)
+
+| Wrong | Right |
+|--------|--------|
+| Upload the **entire monorepo** (or sync from the repo **root**). You will see a **directory index** of folders like `.git`, `server/`, `treegens-web-main/`, `deploy/`. | Build **only the Next.js app** and publish **`treegens-web-main/out/`** (the static export), so opening the site shows the **Treegens UI** at `/`, not a file listing. |
+| Relying on IPFS to “run” the **Node/Express** or **Python** API. | The browser calls your **HTTPS Node API** via `NEXT_PUBLIC_API_URL` (baked in at **build** time). The API is deployed **separately** (VPS, Railway, your existing `treegens-be` host, etc.) — it is **not** served from the same IPFS bundle. |
+
+**4everland build (if you can set a custom command):**
+
+- **Root / working directory:** `treegens-web-main` (or run commands from that folder).
+- **Install:** `yarn` (or `corepack enable && yarn`).
+- **Build:** set env vars in the dashboard (see below), then `yarn build:ipfs` (outputs `out/`).
+- **Publish / output directory:** `out` — **not** the repo root.
+
+If 4everland only offers “link Git and deploy root,” use **separate** CI (GitHub Actions) that `cd treegens-web-main && yarn build:ipfs` and uploads `out/`, or build locally and upload only the contents of `out/`.
+
+**API origin:** 4everland static deploys only the **frontend** (`out/`). The **Node/Express** API must run on a **process host** (VPS, PaaS, etc.); set `NEXT_PUBLIC_API_URL` to that **HTTPS** base when you build. Step-by-step: `deploy/4EVERLAND.md`. Short note: `deploy/4EVERLAND-API-URL.md`.
+
 ## 1. 4everland: confirm your deployment (checklist)
 
 In [4everland Hosting](https://www.4everland.org/), open your project and record:

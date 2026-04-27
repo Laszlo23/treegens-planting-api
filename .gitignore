@@ -5,6 +5,9 @@
 !**/.env.example
 docker-compose.override.yml
 
+# Deploy: local SSH/remote config (copy ssh.env.example to .env.ssh, never commit)
+scripts/deploy/.env*
+
 # Python
 server/.venv/
 **/__pycache__/
@@ -43,3 +46,10 @@ test/runs/
 # Logs
 *.log
 logs/
+
+# Repo root — local attachments / datasets (do not push)
+/*.pdf
+/*.pptx
+/The-Onchain-Wealth-Club/
+test/train/
+test/valid/
