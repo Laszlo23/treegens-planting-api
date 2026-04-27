@@ -1,0 +1,61 @@
+{
+  "name": "TreeGens - Tree Planting Verification",
+  "short_name": "TreeGens",
+  "description": "Decentralized tree planting verification platform with offline video upload capability",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F7F8F3",
+  "theme_color": "#DFEA8A",
+  "orientation": "portrait",
+  "scope": "/",
+  "lang": "en",
+  "categories": ["environment", "utilities", "productivity"],
+  "icons": [
+    {
+      "src": "/img/treegens-logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/img/tree.svg",
+      "sizes": "48x48",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "/img/tree.svg",
+      "sizes": "72x72",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "/img/tree.svg",
+      "sizes": "96x96",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "/img/tree.svg",
+      "sizes": "144x144",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "/img/tree.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "/img/tree.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/img/treegens-placeholder.svg",
+      "sizes": "320x640",
+      "type": "image/svg+xml",
+      "form_factor": "narrow"
+    }
+  ],
+  "features": ["offline-video-upload", "gps-verification", "background-sync"],
+  "prefer_related_applications": false
+}

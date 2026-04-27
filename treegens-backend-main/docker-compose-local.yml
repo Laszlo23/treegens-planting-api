@@ -1,0 +1,48 @@
+services:
+  treegens-backend:
+    build: .
+    container_name: treegens-backend
+    restart: unless-stopped
+    environment:
+      NODE_ENV: development
+      PORT: 5001
+      MONGODB_URI: ${MONGODB_URI}
+      PINATA_JWT: ${PINATA_JWT}
+      PINATA_GATEWAY_BASE_URL: ${PINATA_GATEWAY_BASE_URL}
+    env_file:
+      - .env
+    ports:
+      - '5001:5001'
+    depends_on:
+      - mongodb
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+    networks:
+      - treegens-network
+    command: sh -c "yarn build && yarn migrate && yarn start"
+
+  mongodb:
+    image: mongo:8
+    container_name: treegens-mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password
+      MONGO_INITDB_DATABASE: treegens
+    env_file:
+      - .env
+    ports:
+      - '27017:27017'
+    volumes:
+      - mongodb_data:/data/db
+      - ./init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
+    networks:
+      - treegens-network
+
+volumes:
+  mongodb_data:
+
+networks:
+  treegens-network:
+    driver: bridge

@@ -15,6 +15,7 @@ A comprehensive Node.js backend application for the Treegens video upload platfo
 - **Multiple Access Methods**: Filebase gateway, public IPFS gateways, and direct streaming
 - **Comprehensive Validation**: File type, size limits, and GPS coordinate validation
 - **Optional ML verification**: After each land/plant upload, the server can call a separate **FastAPI** service (`POST /internal/verify-video`) to run YOLO/metadata checks; results are stored on the clip as `mlVerification` (advisory—human review unchanged). Configure `PLANTING_VERIFICATION_API_URL` and `PLANTING_VERIFICATION_INTERNAL_KEY` (see `.env.example`).
+- **Live preview (during recording)**: Authenticated `POST /api/submissions/ml-preview` accepts a single JPEG and proxies to FastAPI `POST /internal/verify-frame` (same YOLO stack). Rate-limited; used by the web app for an on-screen estimate while the user records. Final proof remains the full clip upload and `/internal/verify-video`.
 
 ### User Management
 

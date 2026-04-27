@@ -14,7 +14,11 @@ import httpx
 
 def main() -> int:
     p = argparse.ArgumentParser(description="Test /internal/verify-video with a file.")
-    p.add_argument("video_path", type=Path, help="Path to video (e.g. mp4).")
+    p.add_argument(
+        "video_path",
+        type=Path,
+        help="Path to video (mp4/mov/webm) or still image (png/jpg/webp).",
+    )
     p.add_argument(
         "--base-url",
         default=os.environ.get("PLANTING_API_URL", "http://127.0.0.1:8000"),
@@ -35,12 +39,17 @@ def main() -> int:
 
     captured = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     url = f"{args.base_url.rstrip('/')}/internal/verify-video"
-    mime = "video/mp4"
     suf = path.suffix.lower()
-    if suf == ".mov":
-        mime = "video/quicktime"
-    elif suf == ".webm":
-        mime = "video/webm"
+    mime_by_suffix = {
+        ".mp4": "video/mp4",
+        ".mov": "video/quicktime",
+        ".webm": "video/webm",
+        ".png": "image/png",
+        ".jpg": "image/jpeg",
+        ".jpeg": "image/jpeg",
+        ".webp": "image/webp",
+    }
+    mime = mime_by_suffix.get(suf, "video/mp4")
 
     with open(path, "rb") as f:
         files = {"video": (path.name, f, mime)}

@@ -1,0 +1,10 @@
+/* Tailwind v4: @config MUST come before @import or the legacy config (theme, content) is ignored. */
+@config "../../tailwind.config.js";
+
+@import 'tailwindcss' source('..');
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}

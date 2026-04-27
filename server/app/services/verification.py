@@ -10,6 +10,7 @@ from app.schemas import (
     TreeDetection,
     VerificationBlock,
 )
+from app.services.detection_dedupe import unique_tree_estimate_center_greedy
 from app.services.inference import InferenceResult, run_obb_on_image
 
 
@@ -100,6 +101,7 @@ def build_verification_block(
 def merge_blocks_for_response(
     metadata: MetadataVerification,
     per_image: list[tuple[ModelVerificationSummary, bool]],
+    settings: Settings,
 ) -> VerificationBlock:
     """metadata is shared; per_image is (model summary, pass for that image)."""
     meta_ok = metadata.geo_ok and metadata.time_ok
@@ -107,9 +109,17 @@ def merge_blocks_for_response(
     merged_detections: list[TreeDetection] = []
     for m, _ in per_image:
         merged_detections.extend(m.tree_detections)
+    unique_est = unique_tree_estimate_center_greedy(
+        merged_detections,
+        min_confidence=settings.min_tree_confidence,
+        center_distance_threshold=settings.dedupe_center_distance,
+    )
     merged_summary = {
         "images_evaluated": len(per_image),
         "total_tree_detections": len(merged_detections),
+        "unique_tree_estimate": unique_est,
+        "dedupe_method": "center_greedy",
+        "dedupe_center_distance": settings.dedupe_center_distance,
     }
     return VerificationBlock(
         model=ModelVerificationSummary(

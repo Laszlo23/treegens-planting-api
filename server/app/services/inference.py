@@ -48,7 +48,12 @@ def run_obb_on_image(
 
     model = YOLO(path)
     img = _image_from_bytes(image_bytes)
-    results = model.predict(source=np.array(img), verbose=False)
+    results = model.predict(
+        source=np.array(img),
+        verbose=False,
+        conf=settings.yolo_predict_conf,
+        imgsz=settings.yolo_imgsz,
+    )
     detections: list[TreeDetection] = []
     names = getattr(results[0], "names", {}) or {}
 
@@ -95,6 +100,8 @@ def run_obb_on_image(
         "num_detections": len(detections),
         "max_confidence": max(confs_list) if confs_list else None,
         "mean_confidence": float(np.mean(confs_list)) if confs_list else None,
+        "predict_conf": settings.yolo_predict_conf,
+        "imgsz": settings.yolo_imgsz,
     }
 
     return InferenceResult(

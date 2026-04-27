@@ -37,11 +37,17 @@ class Settings(BaseSettings):
         description="Path to .pt weights; if unset or missing, verification uses stub mode",
     )
     model_version: str = "unconfigured"
+    # Floor passed to Ultralytics predict(); default YOLO is 0.25 and drops weaker boxes entirely.
+    yolo_predict_conf: float = 0.01
+    # Larger imgsz helps small seedlings; CPU cost scales with area.
+    yolo_imgsz: int = 960
     min_tree_confidence: float = 0.25
     min_trees_detected: int = 1
     min_mean_confidence: float = 0.0
-    require_any_high_confidence: bool = True
+    require_any_high_confidence: bool = False
     high_confidence_threshold: float = 0.5
+    # Cross-frame dedupe for unique_tree_estimate (normalized center distance, 0–1 scale).
+    dedupe_center_distance: float = 0.08
     max_clock_skew_seconds: int = 300
     max_upload_bytes: int = 15 * 1024 * 1024
     max_images_per_event: int = 10

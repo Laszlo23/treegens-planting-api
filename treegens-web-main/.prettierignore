@@ -1,0 +1,9 @@
+.next
+node_modules
+dist
+build
+coverage
+yarn.lock
+package-lock.json
+pnpm-lock.yaml
+public/sw.js

@@ -76,6 +76,17 @@ class InternalVerifyVideoResponse(BaseModel):
     model_version: str
 
 
+class InternalVerifyFrameResponse(BaseModel):
+    """Stateless /internal/verify-frame — single JPEG preview for live UI (advisory counts)."""
+
+    model_version: str
+    total_tree_detections: int
+    unique_tree_estimate: int
+    stub: bool
+    metadata: MetadataVerification
+    aggregate_pass: bool
+
+
 class PlantingEventRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 

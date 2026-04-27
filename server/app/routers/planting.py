@@ -198,7 +198,7 @@ async def create_planting_event(
             raise HTTPException(status_code=400, detail=str(e)) from e
         per_image.extend(tuples)
 
-    block = merge_blocks_for_response(meta, per_image)
+    block = merge_blocks_for_response(meta, per_image, settings)
     final_status = "accepted" if block.aggregate_pass else "rejected"
     event.status = final_status
     rv = VerificationRun(
