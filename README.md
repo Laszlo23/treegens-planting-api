@@ -86,6 +86,8 @@ From the **repository root**:
 docker compose up -d --build
 ```
 
+Postgres is mapped to host port **15432** (see [`docker-compose.yml`](docker-compose.yml)) so it does not collide with a local Postgres on **5432**.
+
 - API: `http://127.0.0.1:8000`
 - OpenAPI: `http://127.0.0.1:8000/docs`
 
@@ -127,7 +129,17 @@ You should see HTTP 200 and JSON with `verification.aggregate_pass` and nested `
 
 ### 4. Real YOLO weights on Docker
 
-Default compose does **not** mount weights. For production-like runs:
+Default compose does **not** mount weights.
+
+**Fast path (tracked compose fragment):** copy your trained export to `./models/best.pt` (gitignored `*.pt`), then:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.ml-local.yml up -d --build
+```
+
+[`docker-compose.ml-local.yml`](docker-compose.ml-local.yml) mounts `./models/best.pt` → `/models/best.pt` and sets `MODEL_PATH` / `MODEL_VERSION`.
+
+For production-like secrets + override:
 
 ```bash
 cp docker-compose.override.example.yml docker-compose.override.yml

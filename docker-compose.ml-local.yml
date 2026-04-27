@@ -1,0 +1,11 @@
+# Optional: mount trained YOLO weights for local inference.
+#   cp …/weights/best.pt models/best.pt
+#   docker compose -f docker-compose.yml -f docker-compose.ml-local.yml up -d --build
+
+services:
+  api:
+    environment:
+      MODEL_PATH: /models/best.pt
+      MODEL_VERSION: tree-obb-trained
+    volumes:
+      - ./models/best.pt:/models/best.pt:ro
