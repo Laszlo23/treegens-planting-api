@@ -20,6 +20,7 @@ import { reverseGeocode } from '@/services/geocodingService'
 import { offlineVideoService } from '@/services/offlineVideoService'
 import { CompressionProgress } from '@/services/videoCompressionService'
 import { isValidSubmissionObjectId } from '@/services/submissionApiMappers'
+import type { MlFramePreviewData } from '@/services/mlPreviewService'
 import {
   videoService,
   VideoType,
@@ -70,6 +71,14 @@ export default function NewPlant() {
   const [plantRecordMode, setPlantRecordMode] = useState<'file' | 'live'>(
     'file',
   )
+  const [lastLivePreview, setLastLivePreview] =
+    useState<MlFramePreviewData | null>(null)
+  const [lastLandMl, setLastLandMl] = useState<
+    VideoUploadResponse['data']['mlVerification'] | null
+  >(null)
+  const [lastPlantMl, setLastPlantMl] = useState<
+    VideoUploadResponse['data']['mlVerification'] | null
+  >(null)
 
   const router = useRouter()
 
@@ -267,6 +276,9 @@ export default function NewPlant() {
     setTreesPlantedInput('1')
     setTreetype('')
     setMangroveAnswer(null)
+    setLastLivePreview(null)
+    setLastLandMl(null)
+    setLastPlantMl(null)
     setUploadSuccess(false)
     setUploadError('')
     setValidationError('')
@@ -387,6 +399,7 @@ export default function NewPlant() {
       if (isUserOnline) {
         setShowUploadModal(true)
         const landRes = await uploadVideo(landFile, VideoType.LAND)
+        setLastLandMl(landRes?.data?.mlVerification ?? null)
         const sid = landRes?.data?.submissionId
         if (!sid?.trim()) {
           setUploadError(
@@ -484,7 +497,12 @@ export default function NewPlant() {
     try {
       if (isUserOnline) {
         setShowUploadModal(true)
-        await uploadVideo(plantFile, VideoType.PLANT, submissionIdForPlant)
+        const plantRes = await uploadVideo(
+          plantFile,
+          VideoType.PLANT,
+          submissionIdForPlant,
+        )
+        setLastPlantMl(plantRes?.data?.mlVerification ?? null)
         handleRemoveVideo(VideoType.PLANT)
         setMangroveAnswer(null)
         setTreetype('')
@@ -632,6 +650,30 @@ export default function NewPlant() {
                 ? `Record the land area. Max ${MAX_VIDEO_DURATION} seconds.`
                 : `Record the planted area. Max ${MAX_VIDEO_DURATION} seconds.`}
             </p>
+            {lastLivePreview ? (
+              <div className="mb-3 rounded-xl border border-tree-green-2/20 bg-[#f7fbf3] p-3 text-sm">
+                <div className="flex flex-row items-center justify-between gap-2">
+                  <span className="font-semibold text-gray-800">
+                    Live AI preview
+                  </span>
+                  <span className="text-xs text-gray-600">
+                    model: {lastLivePreview.modelVersion}
+                  </span>
+                </div>
+                <div className="mt-1 text-gray-700">
+                  {lastLivePreview.stub
+                    ? 'Preview is running in stub mode (no weights configured on the ML service).'
+                    : `Estimate: ~${lastLivePreview.uniqueTreeEstimate} (detections: ${lastLivePreview.totalTreeDetections})`}
+                </div>
+                {!lastLivePreview.metadata.geoOk || !lastLivePreview.metadata.timeOk ? (
+                  <div className="mt-1 text-xs text-amber-700">
+                    {lastLivePreview.metadata.geoMessage ||
+                      lastLivePreview.metadata.timeMessage ||
+                      'Metadata policy warning'}
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
             {isLandStep ? (
               landFile ? (
                 <div className="relative aspect-[2/1] w-full overflow-hidden rounded-xl bg-black shadow-md">
@@ -663,6 +705,7 @@ export default function NewPlant() {
                   longitude={longitude}
                   hasValidLocation={hasValidLocation()}
                   isUserOnline={isUserOnline}
+                  onPreviewData={d => setLastLivePreview(d)}
                 />
               ) : (
                 <div className="flex flex-col gap-2">
@@ -725,6 +768,7 @@ export default function NewPlant() {
                   longitude={longitude}
                   hasValidLocation={hasValidLocation()}
                   isUserOnline={isUserOnline}
+                  onPreviewData={d => setLastLivePreview(d)}
                   onUniqueEstimate={n => {
                     if (n >= 1) setTreesPlantedInput(String(n))
                   }}
@@ -763,11 +807,66 @@ export default function NewPlant() {
           </section>
         ) : null}
 
+        {isPlantStep && lastLandMl ? (
+          <section className="mb-6 rounded-xl border border-gray-200 bg-white p-4">
+            <h3 className="mb-2 text-base font-semibold text-gray-800">
+              Land clip ML verification (server)
+            </h3>
+            <div className="text-sm text-gray-700">
+              {lastLandMl.error
+                ? `Error: ${lastLandMl.error}`
+                : lastLandMl.aggregatePass === true
+                  ? 'Pass'
+                  : lastLandMl.aggregatePass === false
+                    ? 'Fail'
+                    : 'Pending'}
+            </div>
+            {lastLandMl.uniqueTreeEstimate != null ? (
+              <div className="mt-1 text-xs text-gray-600">
+                model: {lastLandMl.modelVersion ?? '—'} · unique estimate:{' '}
+                {lastLandMl.uniqueTreeEstimate} · detections:{' '}
+                {lastLandMl.totalTreeDetections ?? '—'} · frames:{' '}
+                {lastLandMl.imagesEvaluated ?? '—'}
+              </div>
+            ) : null}
+          </section>
+        ) : null}
+
         {isPlantStep && !isFullySubmitted ? (
           <section className="mb-6 rounded-xl border border-gray-200 bg-gray-50/50 p-4">
             <h3 className="mb-3 text-base font-semibold text-gray-800">
               Planting details
             </h3>
+            {lastPlantMl ? (
+              <div className="mb-4 rounded-lg border border-gray-200 bg-white p-3 text-sm">
+                <div className="flex flex-row items-center justify-between gap-2">
+                  <span className="font-semibold text-gray-800">
+                    Latest ML verification (server)
+                  </span>
+                  {lastPlantMl.modelVersion ? (
+                    <span className="text-xs text-gray-600">
+                      model: {lastPlantMl.modelVersion}
+                    </span>
+                  ) : null}
+                </div>
+                <div className="mt-1 text-gray-700">
+                  {lastPlantMl.error
+                    ? `Error: ${lastPlantMl.error}`
+                    : lastPlantMl.aggregatePass === true
+                      ? 'Pass'
+                      : lastPlantMl.aggregatePass === false
+                        ? 'Fail'
+                        : 'Pending'}
+                </div>
+                {lastPlantMl.uniqueTreeEstimate != null ? (
+                  <div className="mt-1 text-xs text-gray-600">
+                    unique estimate: {lastPlantMl.uniqueTreeEstimate} · detections:{' '}
+                    {lastPlantMl.totalTreeDetections ?? '—'} · frames:{' '}
+                    {lastPlantMl.imagesEvaluated ?? '—'}
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
             <label
               htmlFor="treesPlanted"
               className="mb-1.5 block text-sm text-gray-600"

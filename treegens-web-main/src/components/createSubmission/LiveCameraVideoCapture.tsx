@@ -2,6 +2,7 @@
 
 import { Button } from '@/components/ui/Button'
 import { postMlFramePreview } from '@/services/mlPreviewService'
+import type { MlFramePreviewData } from '@/services/mlPreviewService'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { IoVideocamOutline } from 'react-icons/io5'
 import { MdClose } from 'react-icons/md'
@@ -31,6 +32,8 @@ type Props = {
   isUserOnline: boolean
   /** Optional: for plant step — suggest tree count from last unique estimate. */
   onUniqueEstimate?: (n: number) => void
+  /** Optional: surface the full ML preview payload to the parent UI. */
+  onPreviewData?: (d: MlFramePreviewData) => void
 }
 
 export function LiveCameraVideoCapture({
@@ -42,6 +45,7 @@ export function LiveCameraVideoCapture({
   hasValidLocation,
   isUserOnline,
   onUniqueEstimate,
+  onPreviewData,
 }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -87,6 +91,7 @@ export function LiveCameraVideoCapture({
       })
       if (!blob) return
       const data = await postMlFramePreview(blob, latitude, longitude)
+      if (onPreviewData) onPreviewData(data)
       const n = data.uniqueTreeEstimate
       setLiveLabel(
         data.stub
@@ -109,6 +114,7 @@ export function LiveCameraVideoCapture({
     latitude,
     longitude,
     onUniqueEstimate,
+    onPreviewData,
   ])
 
   const startCamera = useCallback(async () => {
